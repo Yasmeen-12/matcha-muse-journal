@@ -18,7 +18,7 @@ const Chat = () => {
     {
       id: "1",
       type: "ai",
-      content: "Hello! I'm your personal journaling companion. How are you feeling today? Share your thoughts, and I'll help you reflect on them.",
+      content: "Hello! I'm Sage, your personal journaling companion. How are you feeling today? Share your thoughts, and I'll help you reflect on them.",
       timestamp: new Date(Date.now() - 5 * 60 * 1000),
     },
     {
