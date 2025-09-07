@@ -3,21 +3,21 @@ import { Outlet, Link, useLocation } from "react-router-dom";
 import { MessageCircle, LayoutDashboard, BarChart3, Info } from "lucide-react";
 import mascotImage from "@/assets/matcha-mascot.png";
 
+import { TrendingUp } from "lucide-react";
+
 const Layout = () => {
   const location = useLocation();
   const [appName] = useState("MatchaJournal");
 
   const navItems = [
-    { path: "/", label: "Chat", icon: MessageCircle },
+    { path: "/chat", label: "Chat", icon: MessageCircle },
     { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { path: "/summary", label: "Summary", icon: BarChart3 },
+    { path: "/summary", label: "Summary", icon: TrendingUp },
     { path: "/info", label: "Info", icon: Info },
   ];
 
   const isActive = (path: string) => {
-    if (path === "/" && location.pathname === "/") return true;
-    if (path !== "/" && location.pathname.startsWith(path)) return true;
-    return false;
+    return location.pathname === path;
   };
 
   return (
