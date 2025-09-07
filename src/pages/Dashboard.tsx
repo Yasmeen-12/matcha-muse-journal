@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
-import { Play, Pause, RotateCcw, Plus, CheckCircle, Circle } from "lucide-react";
+import { Play, Pause, RotateCcw, Plus, CheckCircle, Circle, Clock, Coffee, Droplets, Brain, Target, Calendar, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface Task {
   id: string;
@@ -21,9 +23,26 @@ const Dashboard = () => {
   ]);
   
   const [newTask, setNewTask] = useState("");
-  const [pomodoroTime, setPomodoroTime] = useState(25 * 60); // 25 minutes in seconds
+  const [focusMinutes, setFocusMinutes] = useState(25);
+  const [breakMinutes, setBreakMinutes] = useState(5);
+  const [pomodoroTime, setPomodoroTime] = useState(25 * 60);
   const [isRunning, setIsRunning] = useState(false);
   const [pomodoroPhase, setPomodoroPhase] = useState<"work" | "break">("work");
+  const [currentSession, setCurrentSession] = useState(1);
+  const [totalSessions, setTotalSessions] = useState(3);
+  
+  const breakMessages = [
+    "🚶‍♀️ Time to stretch and move around!",
+    "💧 Drink some water and hydrate yourself",
+    "🌱 Take deep breaths and relax your mind",
+    "👀 Look away from the screen and rest your eyes", 
+    "☕ Maybe grab a healthy snack or tea",
+    "🧘‍♂️ Do a quick mindfulness exercise",
+    "📱 Step away from devices for a moment",
+    "🌿 'Progress, not perfection' - you're doing great!"
+  ];
+
+  const [currentBreakMessage, setCurrentBreakMessage] = useState(breakMessages[0]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -35,15 +54,23 @@ const Dashboard = () => {
       setIsRunning(false);
       // Switch phase when timer completes
       if (pomodoroPhase === "work") {
-        setPomodoroTime(5 * 60); // 5 minute break
+        setPomodoroTime(breakMinutes * 60);
         setPomodoroPhase("break");
+        // Set a random break message
+        setCurrentBreakMessage(breakMessages[Math.floor(Math.random() * breakMessages.length)]);
       } else {
-        setPomodoroTime(25 * 60); // 25 minute work session
-        setPomodoroPhase("work");
+        if (currentSession < totalSessions) {
+          setCurrentSession(prev => prev + 1);
+          setPomodoroTime(focusMinutes * 60);
+          setPomodoroPhase("work");
+        } else {
+          // All sessions complete
+          resetPomodoro();
+        }
       }
     }
     return () => clearInterval(interval);
-  }, [isRunning, pomodoroTime, pomodoroPhase]);
+  }, [isRunning, pomodoroTime, pomodoroPhase, focusMinutes, breakMinutes, currentSession, totalSessions, breakMessages]);
 
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
@@ -73,8 +100,25 @@ const Dashboard = () => {
 
   const resetPomodoro = () => {
     setIsRunning(false);
-    setPomodoroTime(25 * 60);
+    setPomodoroTime(focusMinutes * 60);
     setPomodoroPhase("work");
+    setCurrentSession(1);
+  };
+
+  const updateFocusTime = (minutes: string) => {
+    const mins = parseInt(minutes);
+    setFocusMinutes(mins);
+    if (pomodoroPhase === "work" && !isRunning) {
+      setPomodoroTime(mins * 60);
+    }
+  };
+
+  const updateBreakTime = (minutes: string) => {
+    const mins = parseInt(minutes);
+    setBreakMinutes(mins);
+    if (pomodoroPhase === "break" && !isRunning) {
+      setPomodoroTime(mins * 60);
+    }
   };
 
   const completedTasks = tasks.filter(task => task.completed).length;
@@ -82,12 +126,60 @@ const Dashboard = () => {
   const progressPercentage = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8">
+    <div className="max-w-7xl mx-auto space-y-8">
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-foreground mb-2">Dashboard</h1>
         <p className="text-muted-foreground">
           Manage your daily tasks and stay focused with the Pomodoro technique.
         </p>
+      </div>
+
+      {/* Weekly Status - Horizontal Layout */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <Card className="glass-effect p-6 border-primary/20 hover:border-primary/40 transition-all duration-300">
+          <div className="text-center space-y-3">
+            <div className="w-12 h-12 gradient-primary rounded-full flex items-center justify-center mx-auto">
+              <Target className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-foreground">12</div>
+              <div className="text-sm text-muted-foreground">Goals Completed</div>
+            </div>
+            <Badge variant="secondary" className="gradient-primary text-white border-0">
+              This Week
+            </Badge>
+          </div>
+        </Card>
+
+        <Card className="glass-effect p-6 border-primary/20 hover:border-primary/40 transition-all duration-300">
+          <div className="text-center space-y-3">
+            <div className="w-12 h-12 gradient-primary rounded-full flex items-center justify-center mx-auto">
+              <Calendar className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-foreground">18</div>
+              <div className="text-sm text-muted-foreground">Pomodoro Sessions</div>
+            </div>
+            <Badge variant="secondary" className="gradient-primary text-white border-0">
+              7 Days
+            </Badge>
+          </div>
+        </Card>
+
+        <Card className="glass-effect p-6 border-primary/20 hover:border-primary/40 transition-all duration-300">
+          <div className="text-center space-y-3">
+            <div className="w-12 h-12 gradient-primary rounded-full flex items-center justify-center mx-auto">
+              <TrendingUp className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-foreground">85%</div>
+              <div className="text-sm text-muted-foreground">Productivity Score</div>
+            </div>
+            <Badge variant="secondary" className="gradient-primary text-white border-0">
+              Improving
+            </Badge>
+          </div>
+        </Card>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -154,10 +246,55 @@ const Dashboard = () => {
           </Card>
         </div>
 
-        {/* Pomodoro Timer Section */}
+        {/* Enhanced Pomodoro Timer Section */}
         <div className="space-y-6">
           <Card className="marble-card p-6">
             <h2 className="text-xl font-semibold text-foreground mb-4">Pomodoro Timer</h2>
+            
+            {/* Custom Time Settings */}
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-muted-foreground">Focus Time</label>
+                <Select value={focusMinutes.toString()} onValueChange={updateFocusTime}>
+                  <SelectTrigger className="glass-effect">
+                    <SelectValue placeholder="Focus time" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="15">15 minutes</SelectItem>
+                    <SelectItem value="20">20 minutes</SelectItem>
+                    <SelectItem value="25">25 minutes</SelectItem>
+                    <SelectItem value="30">30 minutes</SelectItem>
+                    <SelectItem value="45">45 minutes</SelectItem>
+                    <SelectItem value="60">60 minutes</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-muted-foreground">Break Time</label>
+                <Select value={breakMinutes.toString()} onValueChange={updateBreakTime}>
+                  <SelectTrigger className="glass-effect">
+                    <SelectValue placeholder="Break time" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="5">5 minutes</SelectItem>
+                    <SelectItem value="10">10 minutes</SelectItem>
+                    <SelectItem value="15">15 minutes</SelectItem>
+                    <SelectItem value="20">20 minutes</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Session Info */}
+            <div className="text-center mb-6 p-4 glass-effect rounded-lg">
+              <div className="text-sm text-muted-foreground mb-1">
+                {totalSessions} sessions of {focusMinutes} mins with {breakMinutes} mins breaks
+              </div>
+              <div className="text-xs text-primary font-medium">
+                Session {currentSession} of {totalSessions}
+              </div>
+            </div>
             
             <div className="text-center space-y-6">
               {/* Timer Display */}
@@ -173,6 +310,16 @@ const Dashboard = () => {
                   </div>
                 </div>
               </div>
+
+              {/* Break Message */}
+              {pomodoroPhase === "break" && (
+                <Card className="glass-effect p-4 border-primary/20">
+                  <div className="flex items-center justify-center space-x-2">
+                    <Coffee className="w-5 h-5 text-primary" />
+                    <p className="text-sm text-foreground">{currentBreakMessage}</p>
+                  </div>
+                </Card>
+              )}
 
               {/* Controls */}
               <div className="flex justify-center space-x-4">
@@ -195,11 +342,20 @@ const Dashboard = () => {
                 </Button>
               </div>
 
-              {/* Progress Ring */}
+              {/* Session Progress */}
+              <div className="space-y-2">
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>Session Progress</span>
+                  <span>{currentSession}/{totalSessions}</span>
+                </div>
+                <Progress value={(currentSession / totalSessions) * 100} className="h-2" />
+              </div>
+
+              {/* Status Message */}
               <div className="text-xs text-muted-foreground">
                 {pomodoroPhase === "work" 
                   ? "Focus on your current task without distractions"
-                  : "Take a short break and relax"
+                  : "Take a break and recharge your energy"
                 }
               </div>
             </div>
